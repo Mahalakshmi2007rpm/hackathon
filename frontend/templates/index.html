@@ -970,6 +970,32 @@
 			}
 		}
 
+		function wait(ms) {
+			return new Promise((resolve) => setTimeout(resolve, ms));
+		}
+
+		async function waitForJobResult(jobId, maxAttempts = 240, intervalMs = 2500) {
+			for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+				const response = await fetch(`/jobs/${encodeURIComponent(jobId)}`);
+				if (!response.ok) {
+					throw new Error(`Failed to check job status (${response.status})`);
+				}
+
+				const payload = await response.json();
+				if (payload.status === "completed") {
+					return payload.result || {};
+				}
+				if (payload.status === "failed") {
+					throw new Error(payload.error || "Processing failed on server.");
+				}
+
+				showStatus(`Processing clip job ${jobId.slice(0, 8)}... this can take around 1-2 minutes.`);
+				await wait(intervalMs);
+			}
+
+			throw new Error("Processing took too long. Please try a shorter video window.");
+		}
+
 		function isAllowedFile(file) {
 			if (!file || !file.name) {
 				return false;
@@ -1128,10 +1154,17 @@
 
 			try {
 				const payload = await submitWithRetry(formData, 1);
-				setUploadProgress(100, "Upload complete. Finalizing clips...");
+				setUploadProgress(100, "Upload complete. Server is processing your clips...");
+
+				let finalPayload = payload;
+				if (payload && payload.job_id && payload.status === "processing") {
+					showStatus("Upload complete. Processing started on server. Please wait...");
+					finalPayload = await waitForJobResult(payload.job_id);
+				}
+
 				completeTimeline();
 				showStatus("Done. Clips generated successfully.");
-				renderResults(payload);
+				renderResults(finalPayload);
 				await loadRecentJobs();
 			} catch (error) {
 				const message = error.message === "__NETWORK__"
