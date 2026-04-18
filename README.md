@@ -223,12 +223,13 @@ To maximize evaluation score:
 - `GEMINI_API_KEY`
 5. Deploy. The service health check is available at `/health`.
 
-### Option B: Railway or Other Docker Hosts
 
-1. Use the same repository.
-2. Build from the included `Dockerfile`.
-3. Set `OPENAI_API_KEY` and `GEMINI_API_KEY` in the host dashboard.
-4. Make sure the platform exposes the container on the provided `PORT`.
+ THIS IS THE WEBSITE URL WHICH WAS HOSTED IN THE RENDER : 
+ URL : https://hackathon-eo4e.onrender.com/
+
+PRESENTATION DEMO LINK : 
+https://drive.google.com/file/d/1pbmztZZuOJWs-f3os8-tDi6DLyrSVwcu/view?usp=sharing
+   
 
 ## Hackathon Submission Checklist
 
