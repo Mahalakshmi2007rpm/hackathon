@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: attentionx
+    env: docker
+    autoDeploy: true
+    plan: free
+    healthCheckPath: /health

@@ -213,25 +213,22 @@ To maximize evaluation score:
 
 ## Hosting Guide (Publicly Accessible)
 
-### Option A: Render (FastAPI) + Streamlit Community Cloud
+### Option A: Render Docker Web Service
 
-1. Push code to public GitHub repo.
-2. Render:
-- New Web Service from your repo
-- Build command: `pip install -r requirements.txt`
-- Start command: `uvicorn backend.fastapi_app.main:app --host 0.0.0.0 --port 10000`
-- Add env vars OPENAI_API_KEY and GEMINI_API_KEY
-3. Streamlit Cloud:
-- Deploy from same repo
-- App file path: `frontend/streamlit_app.py`
-- Add secret `ATTENTIONX_API_URL` with your Render API URL
+1. Push the repo to GitHub.
+2. In Render, create a new Web Service from the repo.
+3. Choose the Docker runtime so Render uses the included `Dockerfile`.
+4. Add environment variables as needed:
+- `OPENAI_API_KEY`
+- `GEMINI_API_KEY`
+5. Deploy. The service health check is available at `/health`.
 
-### Option B: Railway
+### Option B: Railway or Other Docker Hosts
 
-1. Deploy FastAPI service from repo.
-2. Set start command same as above.
-3. Configure env vars in Railway dashboard.
-4. Point Streamlit to Railway URL.
+1. Use the same repository.
+2. Build from the included `Dockerfile`.
+3. Set `OPENAI_API_KEY` and `GEMINI_API_KEY` in the host dashboard.
+4. Make sure the platform exposes the container on the provided `PORT`.
 
 ## Hackathon Submission Checklist
 
@@ -261,6 +258,13 @@ pip install -r requirements.txt
 $env:OPENAI_API_KEY="your_openai_key"
 $env:GEMINI_API_KEY="your_gemini_key"
 uvicorn backend.fastapi_app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+To run the Docker image locally:
+
+```powershell
+docker build -t attentionx .
+docker run -p 8000:10000 -e OPENAI_API_KEY="your_openai_key" -e GEMINI_API_KEY="your_gemini_key" attentionx
 ```
 
 In another terminal:
