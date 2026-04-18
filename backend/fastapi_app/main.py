@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import threading
 import time
 import uuid
@@ -53,6 +54,9 @@ app.mount("/media", StaticFiles(directory=str(DATA_DIR)), name="media")
 
 JOBS_LOCK = threading.Lock()
 JOBS: dict[str, dict[str, Any]] = {}
+MAX_UPLOAD_MB = int(os.getenv("MAX_UPLOAD_MB", "95"))
+MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
+UPLOAD_CHUNK_SIZE = 1024 * 1024
 
 
 def _job_state_path(job_id: str) -> Path:
@@ -224,8 +228,22 @@ async def process_video(
 	job_id = uuid.uuid4().hex
 	safe_name = Path(file.filename).name
 	input_path = UPLOAD_DIR / f"{job_id}_{safe_name}"
-	with input_path.open("wb") as out:
-		out.write(await file.read())
+	bytes_written = 0
+	try:
+		with input_path.open("wb") as out:
+			while True:
+				chunk = await file.read(UPLOAD_CHUNK_SIZE)
+				if not chunk:
+					break
+				bytes_written += len(chunk)
+				if bytes_written > MAX_UPLOAD_BYTES:
+					raise HTTPException(
+						status_code=413,
+						detail=f"File too large. Max supported upload size is {MAX_UPLOAD_MB} MB.",
+					)
+				out.write(chunk)
+	finally:
+		await file.close()
 
 	with JOBS_LOCK:
 		JOBS[job_id] = {

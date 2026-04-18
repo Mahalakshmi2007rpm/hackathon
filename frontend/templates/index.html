@@ -680,6 +680,7 @@
 			".mpg",
 			".3gp",
 		]);
+		const maxUploadMb = 95;
 
 		const stageEls = Array.from(document.querySelectorAll(".stage"));
 		let stageTimer = null;
@@ -1047,6 +1048,8 @@
 					"Unsupported file extension. Use one of: .mp4, .mov, .mkv, .avi, .webm, .m4v, .wmv, .flv, .mpeg, .mpg, .3gp",
 					true
 				);
+			} else if ((file.size / (1024 * 1024)) > maxUploadMb) {
+				showStatus(`File is too large for hosted upload. Use a file under ${maxUploadMb} MB or trim/compress first.`, true);
 			} else {
 				statusBox.classList.add("hidden");
 			}
@@ -1160,6 +1163,11 @@
 
 			if (!isAllowedFile(fileInput.files[0])) {
 				showStatus("Selected file type is not supported by the backend.", true);
+				return;
+			}
+
+			if ((fileInput.files[0].size / (1024 * 1024)) > maxUploadMb) {
+				showStatus(`Selected file exceeds ${maxUploadMb} MB. Please trim or compress the video before uploading.`, true);
 				return;
 			}
 
