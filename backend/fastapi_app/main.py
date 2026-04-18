@@ -19,10 +19,12 @@ from backend.utils.video_utils import ensure_dir
 ROOT = Path(__file__).resolve().parents[2]
 UPLOAD_DIR = ROOT / "data" / "uploads"
 OUTPUT_DIR = ROOT / "data" / "outputs"
+JOB_STATE_DIR = ROOT / "data" / "job_state"
 TEMPLATE_DIR = ROOT / "frontend" / "templates"
 DATA_DIR = ROOT / "data"
 ensure_dir(UPLOAD_DIR)
 ensure_dir(OUTPUT_DIR)
+ensure_dir(JOB_STATE_DIR)
 
 ALLOWED_VIDEO_SUFFIXES = {
 	".mp4",
@@ -51,6 +53,25 @@ app.mount("/media", StaticFiles(directory=str(DATA_DIR)), name="media")
 
 JOBS_LOCK = threading.Lock()
 JOBS: dict[str, dict[str, Any]] = {}
+
+
+def _job_state_path(job_id: str) -> Path:
+	return JOB_STATE_DIR / f"{job_id}.json"
+
+
+def _save_job_state(job_id: str, payload: dict[str, Any]) -> None:
+	state_file = _job_state_path(job_id)
+	state_file.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def _load_job_state(job_id: str) -> dict[str, Any] | None:
+	state_file = _job_state_path(job_id)
+	if not state_file.exists():
+		return None
+	try:
+		return json.loads(state_file.read_text(encoding="utf-8"))
+	except Exception:
+		return None
 
 
 def _public_url_for_file(file_path: str) -> str:
@@ -120,14 +141,20 @@ def _run_processing_job(
 		)
 		enriched = _enrich_result(result)
 		with JOBS_LOCK:
+			if job_id not in JOBS:
+				JOBS[job_id] = {"status": "processing", "created_at": int(time.time())}
 			JOBS[job_id]["status"] = "completed"
 			JOBS[job_id]["completed_at"] = int(time.time())
 			JOBS[job_id]["result"] = enriched
+			_save_job_state(job_id, JOBS[job_id])
 	except Exception as exc:
 		with JOBS_LOCK:
+			if job_id not in JOBS:
+				JOBS[job_id] = {"status": "processing", "created_at": int(time.time())}
 			JOBS[job_id]["status"] = "failed"
 			JOBS[job_id]["completed_at"] = int(time.time())
 			JOBS[job_id]["error"] = str(exc)
+			_save_job_state(job_id, JOBS[job_id])
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -155,7 +182,16 @@ def get_job(job_id: str) -> dict[str, Any]:
 	with JOBS_LOCK:
 		job = JOBS.get(job_id)
 	if job is None:
-		raise HTTPException(status_code=404, detail="Job not found")
+		job = _load_job_state(job_id)
+		if job is not None:
+			with JOBS_LOCK:
+				JOBS[job_id] = job
+	if job is None:
+		return {
+			"job_id": job_id,
+			"status": "processing",
+			"message": "Job state is warming up. Please retry.",
+		}
 
 	response: dict[str, Any] = {
 		"job_id": job_id,
@@ -197,6 +233,7 @@ async def process_video(
 			"created_at": int(time.time()),
 			"input_video": safe_name,
 		}
+		_save_job_state(job_id, JOBS[job_id])
 
 	worker = threading.Thread(
 		target=_run_processing_job,

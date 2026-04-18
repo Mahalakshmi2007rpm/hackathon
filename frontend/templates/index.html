@@ -985,7 +985,7 @@
 		}
 
 		async function waitForJobResult(jobId, maxAttempts = 240, intervalMs = 2500) {
-			const transientCodes = new Set([429, 500, 502, 503, 504, 520, 522, 524]);
+			const transientCodes = new Set([404, 429, 500, 502, 503, 504, 520, 522, 524]);
 			for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
 				try {
 					const response = await fetchWithTimeout(`/jobs/${encodeURIComponent(jobId)}`);
