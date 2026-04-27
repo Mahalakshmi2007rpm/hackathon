@@ -211,68 +211,13 @@ To maximize evaluation score:
 - Add retry + timeout policy for external APIs.
 - Add async job queue (Celery/RQ) for long videos.
 
-## Hosting Guide (Publicly Accessible)
-
-### Option A: Render Docker Web Service
-
-1. Push the repo to GitHub.
-2. In Render, create a new Web Service from the repo.
-3. Choose the Docker runtime so Render uses the included `Dockerfile`.
-4. Add environment variables as needed:
-- `OPENAI_API_KEY`
-- `GEMINI_API_KEY`
-5. Deploy. The service health check is available at `/health`.
-
 
  THIS IS THE WEBSITE URL WHICH WAS HOSTED IN THE RENDER : 
  URL : https://hackathon-eo4e.onrender.com/
 
 PRESENTATION DEMO LINK : 
 https://drive.google.com/file/d/1pbmztZZuOJWs-f3os8-tDi6DLyrSVwcu/view?usp=sharing
-   
 
-## Hackathon Submission Checklist
-
-- Public GitHub repository
-- Full source code present
-- README with setup + architecture + usage
-- Demo video link in README (mandatory)
-- Hosted URL (optional bonus)
-
-Add your demo section in this README:
-
-```markdown
-## Demo Video
-Google Drive Link: <paste-link-here>
-
-## Live Deployment
-Frontend URL: <paste-streamlit-url>
-Backend URL: <paste-api-url>
-```
-
-## Quick Start Commands
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:OPENAI_API_KEY="your_openai_key"
-$env:GEMINI_API_KEY="your_gemini_key"
-uvicorn backend.fastapi_app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-
-To run the Docker image locally:
-
-```powershell
-docker build -t attentionx .
-docker run -p 8000:10000 -e OPENAI_API_KEY="your_openai_key" -e GEMINI_API_KEY="your_gemini_key" attentionx
-```
-
-In another terminal:
-
-```powershell
-streamlit run frontend/streamlit_app.py
-```
 
 ## Important Notes
 
