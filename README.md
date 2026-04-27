@@ -215,10 +215,6 @@ To maximize evaluation score:
  THIS IS THE WEBSITE URL WHICH WAS HOSTED IN THE RENDER : 
  URL : https://hackathon-eo4e.onrender.com/
 
-PRESENTATION DEMO LINK : 
-https://drive.google.com/file/d/1pbmztZZuOJWs-f3os8-tDi6DLyrSVwcu/view?usp=sharing
-
-
 ## Important Notes
 
 - Long videos are compute-heavy; start with short samples to validate pipeline.
